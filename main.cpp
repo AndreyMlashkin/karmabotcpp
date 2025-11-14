@@ -3,6 +3,8 @@
 #include <regex>
 #include <iostream>
 
+#include "karmaloader.h"
+
 std::string loadToken() {
     const char* token = std::getenv("TELEGRAM_BOT_TOKEN");
     if (!token) {
@@ -31,7 +33,9 @@ int main() {
     TgBot::Bot bot(token);
 
     // 2. In-memory karma storage: username -> score
+    KarmaLoader loader("saved_karma.txt");
     std::unordered_map<std::string, int> karma;
+    loader.loadKarma(karma);
 
     // Regex to catch things like "@user123 ++" or "@user123--"
     std::regex karmaRegex(R"((@\w+)\s*(\+\+|--))");
@@ -75,6 +79,7 @@ int main() {
             int delta = (op == "++") ? 1 : -1;
             int& score = karma[username];
             score += delta;
+            loader.saveKarma(karma);
 
             std::string response = username + " now has karma: " + std::to_string(score);
             bot.getApi().sendMessage(message->chat->id, response);
