@@ -12,7 +12,7 @@ std::string loadToken() {
 }
 
 int main() {
-    // 1. Put your bot token here
+    // 1. Load bot token
     const std::string token = loadToken();
     TgBot::Bot bot(token);
 
@@ -22,31 +22,23 @@ int main() {
     // Regex to catch things like "@user123 ++" or "@user123--"
     std::regex karmaRegex(R"((@\w+)\s*(\+\+|--))");
 
-    // bot.getApi().
-
-    bot.getEvents().onNonCommandMessage([&](TgBot::Message::Ptr message) {
-        std::cout << "got a command: " << message << "\t" << message->text << std::endl;
-    });
-
-
-    // 3. Handle any incoming message
+    // 3. Handle ANY incoming message
     bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
-        std::cout << "got a message: " << message << std::endl;
+        std::cout << "got a message: " << message << "\t" << message->text << std::endl;
+
         if (!message || message->text.empty())
             return;
 
-        const std::string &text = message->text;
+        const std::string& text = message->text;
 
-        // Optional: ignore private chats, work only in groups
         if (message->chat->type != TgBot::Chat::Type::Group &&
-            message->chat->type != TgBot::Chat::Type::Supergroup) {
-
+            message->chat->type != TgBot::Chat::Type::Supergroup)
+        {
             bot.getApi().sendMessage(
                 message->chat->id,
                 "Hi! I work only inside group chats.\n"
                 "Add me to a group and use @username ++ or -- to change karma."
                 );
-
             return;
         }
 
@@ -56,40 +48,39 @@ int main() {
             std::string username = match[1].str();
             std::string op       = match[2].str();
 
-            // Optional: prevent self-karma
+            // Prevent self-karma
             if (message->from && ("@" + message->from->username) == username) {
                 bot.getApi().sendMessage(
                     message->chat->id,
-                    "Нельзя менять свою карму 😉"
-                );
+                    "You cannot change your own karma 😉"
+                    );
                 return;
             }
 
             int delta = (op == "++") ? 1 : -1;
-            int &score = karma[username];
+            int& score = karma[username];
             score += delta;
 
-            std::string response = username + " теперь имеет карму: " + std::to_string(score);
+            std::string response = username + " now has karma: " + std::to_string(score);
             bot.getApi().sendMessage(message->chat->id, response);
             return;
         }
 
-        // Optional: command to show karma: "/karma @user"
+        // Command to show karma: "/karma @user"
         if (text.rfind("/karma", 0) == 0) { // starts with "/karma"
-            // simple split by space
             std::istringstream iss(text);
             std::string cmd, userArg;
             iss >> cmd >> userArg;
 
             if (!userArg.empty() && userArg[0] == '@') {
                 int score = karma[userArg];
-                std::string response = userArg + " карма: " + std::to_string(score);
+                std::string response = userArg + " has karma: " + std::to_string(score);
                 bot.getApi().sendMessage(message->chat->id, response);
             } else {
                 bot.getApi().sendMessage(
                     message->chat->id,
-                    "Использование: /karma @username"
-                );
+                    "Usage: /karma @username"
+                    );
             }
         }
     });
@@ -98,14 +89,14 @@ int main() {
     TgBot::TgLongPoll longPoll(bot);
 
     std::cout << "Karma bot started..." << std::endl;
+
     while (true) {
         try {
             longPoll.start();
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
     }
 
     return 0;
 }
-
