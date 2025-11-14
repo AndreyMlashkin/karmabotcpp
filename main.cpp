@@ -11,6 +11,20 @@ std::string loadToken() {
     return std::string(token);
 }
 
+std::int64_t getChatId()
+{
+    const char* id = std::getenv("CHAT_ID");
+    if (!id) {
+        throw std::runtime_error("CHAT_ID env variable is not set");
+    }
+
+    try {
+        return std::stoll(std::string(id));
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Invalid CHAT_ID value: ") + e.what());
+    }
+}
+
 int main() {
     // 1. Load bot token
     const std::string token = loadToken();
@@ -24,7 +38,7 @@ int main() {
 
     // 3. Handle ANY incoming message
     bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
-        std::cout << "got a message: " << message << "\t" << message->text << std::endl;
+        std::cout << "got a message: " << message << "\t" << message->text << "ID: " << message->chat->id << std::endl;
 
         if (!message || message->text.empty())
             return;
@@ -36,8 +50,9 @@ int main() {
         {
             bot.getApi().sendMessage(
                 message->chat->id,
-                "Hi! I work only inside group chats.\n"
-                "Add me to a group and use @username ++ or -- to change karma."
+                "Hi! I work only inside a dedicated group\n"
+                "If you want to adapt the bot in your group, contact the admin @the_good_exchange"
+                "Use @username ++ or -- to change karma."
                 );
             return;
         }
