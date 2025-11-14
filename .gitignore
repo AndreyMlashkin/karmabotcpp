@@ -1,3 +1,4 @@
 build-debug/
 CMakeUserPresets.json
 .env
+CMakeLists.txt.user

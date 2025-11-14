@@ -1,0 +1,18 @@
+[requires]
+tgbot/1.9.1
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
+# Boost options (recommended for tgbot)
+boost*:shared=False
+boost*:without_test=True
+boost*:without_math=False
+boost*:without_locale=False
+
+# OpenSSL & cURL options (static builds recommended)
+openssl*:shared=False
+curl*:shared=False
+
