@@ -22,9 +22,16 @@ int main() {
     // Regex to catch things like "@user123 ++" or "@user123--"
     std::regex karmaRegex(R"((@\w+)\s*(\+\+|--))");
 
+    // bot.getApi().
+
+    bot.getEvents().onNonCommandMessage([&](TgBot::Message::Ptr message) {
+        std::cout << "got a command: " << message << "\t" << message->text << std::endl;
+    });
+
+
     // 3. Handle any incoming message
     bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
-        std::cout << "got a message: " << message;
+        std::cout << "got a message: " << message << std::endl;
         if (!message || message->text.empty())
             return;
 
@@ -33,6 +40,13 @@ int main() {
         // Optional: ignore private chats, work only in groups
         if (message->chat->type != TgBot::Chat::Type::Group &&
             message->chat->type != TgBot::Chat::Type::Supergroup) {
+
+            bot.getApi().sendMessage(
+                message->chat->id,
+                "Hi! I work only inside group chats.\n"
+                "Add me to a group and use @username ++ or -- to change karma."
+                );
+
             return;
         }
 
