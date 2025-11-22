@@ -8,21 +8,70 @@
 
 #include <tgbot/tgbot.h>
 
+#include <cpr/cpr.h>
+#include <nlohmann/json.hpp>
+
 struct Rates {
     double usdKes{};
     double eurKes{};
     double rubKes{};
 };
 
-// TODO: replace with real HTTP call to some FX API
-inline Rates fetchRates()
+Rates fetchRates()
 {
-    Rates r;
-    // Placeholder values – replace with real data
-    r.usdKes = 130.50;
-    r.eurKes = 142.30;
-    r.rubKes = 1.45;
-    return r;
+    using nlohmann::json;
+
+    auto r = cpr::Get(
+        cpr::Url{"https://open.er-api.com/v6/latest/USD"}
+    );
+
+    std::cout << r.text;
+
+    if (r.error || r.status_code != 200) {
+        throw std::runtime_error(
+            "FX HTTP error: " + r.error.message +
+            " (status " + std::to_string(r.status_code) + ")" +
+            " Text was:\n" + r.text
+        );
+    }
+
+    json j = json::parse(r.text);
+
+    // Basic success check
+    if (j.value("result", std::string{}) != "success") {
+        std::string err = "unknown";
+        if (j.contains("error-type")) {
+            err = j["error-type"].get<std::string>();
+        }
+        throw std::runtime_error("FX API returned non-success: " + err);
+    }
+
+    if (!j.contains("rates")) {
+        throw std::runtime_error("FX response has no 'rates' field");
+    }
+
+    auto rates = j.at("rates");
+
+    if (!rates.contains("KES") || !rates.contains("EUR") || !rates.contains("RUB")) {
+        throw std::runtime_error("FX response missing one of KES/EUR/RUB");
+    }
+
+    // 1 USD = ? KES / EUR / RUB
+    double usdKes = rates.at("KES").get<double>(); // USD→KES
+    double usdEur = rates.at("EUR").get<double>(); // USD→EUR
+    double usdRub = rates.at("RUB").get<double>(); // USD→RUB
+
+    Rates out;
+    out.usdKes = usdKes;
+
+    // We want 1 EUR = ? KES
+    // 1 USD = usdEur EUR → 1 EUR = (1 / usdEur) USD → in KES: usdKes / usdEur
+    out.eurKes = usdKes / usdEur;
+
+    // 1 RUB = ? KES
+    out.rubKes = usdKes / usdRub;
+
+    return out;
 }
 
 inline std::string formatRates(const Rates& r)

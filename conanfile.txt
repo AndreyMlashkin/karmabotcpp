@@ -1,5 +1,7 @@
 [requires]
 tgbot/1.9.1
+cpr/1.13.0
+nlohmann_json/3.11.3
 
 [generators]
 CMakeDeps
