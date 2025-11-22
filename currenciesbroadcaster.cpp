@@ -15,6 +15,31 @@ struct Rates {
     double usdKes{};
     double eurKes{};
     double rubKes{};
+
+    double usdKesBuy() const
+    {
+        return usdKes * 0.97;
+    }
+    double usdKesSell() const
+    {
+        return usdKes * 1.03;
+    }
+    double eurKesBuy() const
+    {
+        return usdKes * 0.99;
+    }
+    double eurKesSell() const
+    {
+        return usdKes * 1.05;
+    }
+    double rubKesBuy() const
+    {
+        return usdKes * 0.965;
+    }
+    double rubKesSell() const
+    {
+        return usdKes * 1.03;
+    }
 };
 
 Rates fetchRates()
@@ -78,9 +103,9 @@ inline std::string formatRates(const Rates& r)
 {
     std::ostringstream oss;
     oss << "📈 *Exchange rates (KES)*\n\n"
-        << "USD/KES: " << r.usdKes << "\n"
-        << "EUR/KES: " << r.eurKes << "\n"
-        << "RUB/KES: " << r.rubKes << "\n";
+        << "USD/KES: " << r.usdKesBuy() << " - " << r.usdKesSell() << "\n"
+        << "EUR/KES: " << r.eurKesBuy() << " - " << r.eurKesSell() << "\n"
+        << "RUB/KES: " << r.rubKesBuy() << " - " << r.rubKesSell() << "\n";
     return oss.str();
 }
 
