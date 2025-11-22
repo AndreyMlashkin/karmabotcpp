@@ -5,6 +5,7 @@
 
 #include "karmabot.h"
 #include "misc.h"
+#include "currenciesbroadcaster.h"
 
 int main() {
     // 1. Load bot token
@@ -52,6 +53,10 @@ int main() {
     TgBot::TgLongPoll longPoll(bot);
 
     std::cout << "Karma bot started..." << std::endl;
+
+    auto allowedChats = getAllowedChatIds();
+    CurrenciesBroadcaster broadcaster(&bot, allowedChats);
+    broadcaster.start();
 
     while (true) {
         try {
