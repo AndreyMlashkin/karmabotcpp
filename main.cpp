@@ -134,7 +134,8 @@ int main() {
     loader.loadKarma(karma);
 
     // 3. Handle ANY incoming message
-    bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message)
+    {
         std::cout << "got a message: " << message->text
                   << " from: " << getUserName(message)
                   << " in chat: " << message->chat->id
@@ -145,8 +146,8 @@ int main() {
 
         const std::string& text = message->text;
 
-        if (message->chat->type != TgBot::Chat::Type::Group &&
-            message->chat->type != TgBot::Chat::Type::Supergroup)
+        bool isGroup = message->chat->type == TgBot::Chat::Type::Group || message->chat->type == TgBot::Chat::Type::Supergroup;
+        if (!isGroup || message->chat->id != getChatId())
         {
             bot.getApi().sendMessage(
                 message->chat->id,
