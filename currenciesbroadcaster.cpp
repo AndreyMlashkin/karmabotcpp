@@ -66,17 +66,17 @@ Rates fetchRates()
         if (j.contains("error-type")) {
             err = j["error-type"].get<std::string>();
         }
-        throw std::runtime_error("FX API returned non-success: " + err + "\nText was: " + r.text);
+        throw std::runtime_error(std::string("FX API returned non-success: ") + err + "\nText was: " + r.text);
     }
 
     if (!j.contains("rates")) {
-        throw std::runtime_error("FX response has no 'rates' field" + "\nText was: " + r.text);
+        throw std::runtime_error(std::string("FX response has no 'rates' field") + "\nText was: " + r.text);
     }
 
     auto rates = j.at("rates");
 
     if (!rates.contains("KES") || !rates.contains("EUR") || !rates.contains("RUB")) {
-        throw std::runtime_error("FX response missing one of KES/EUR/RUB" + "\nText was: " + r.text);
+        throw std::runtime_error(std::string("FX response missing one of KES/EUR/RUB") + "\nText was: " + r.text);
     }
 
     // 1 USD = ? KES / EUR / RUB
