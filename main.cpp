@@ -46,6 +46,7 @@ bool isWhiteListed(std::int64_t chatId)
     return chatId == getChatId() || chatId == getDebugChatId();
 }
 
+//! If no karma update detected - returns an empty string
 std::string updateKarma(TgBot::Message::Ptr message, std::unordered_map<std::string, int>& karma)
 {
     const std::string& text = message->text;
@@ -116,6 +117,44 @@ std::string updateKarma(TgBot::Message::Ptr message, std::unordered_map<std::str
     return response;
 }
 
+std::string displayKarma(TgBot::Message::Ptr message, std::unordered_map<std::string, int>& karma, const KarmaLoader& loader)
+{
+    const std::string& text = message->text;
+    // Command to show karma: "/karma @user"
+    if (text.rfind("/karma", 0) != 0)
+        return {};
+
+    std::istringstream iss(text);
+    std::string cmd, userArg;
+    iss >> cmd >> userArg;
+
+    // CASE 1: /karma @username → show karma for that user
+    if (!userArg.empty() && userArg[0] == '@') {
+        int score = karma[userArg];
+        std::string response = userArg + " has karma: " + std::to_string(score);
+        return response;
+    }
+
+    // CASE 2: /karma with NO argument → dump full report using KarmaLoader::karmaToString
+    if (userArg.empty()) {
+        if (karma.empty())
+        {
+            return "No karma data available yet.";
+        }
+
+        // Use KarmaLoader to generate a string representation
+        std::string csv = loader.karmaToString(karma);
+
+        // You can send it as plain text (username,karma per line)
+        std::string report = "📊 Karma report (username, karma):\n\n" + csv;
+        return report;
+    }
+    // CASE 3: Invalid usage
+    return "Usage:\n"
+           "/karma @username — show karma for a user\n"
+           "/karma — show full karma report";
+}
+
 std::string getUserName(TgBot::Message::Ptr message)
 {
     std::string sender;
@@ -163,8 +202,6 @@ int main() {
         if (!message || message->text.empty())
             return;
 
-        const std::string& text = message->text;
-
         bool isGroup = message->chat->type == TgBot::Chat::Type::Group || message->chat->type == TgBot::Chat::Type::Supergroup;
         if (!isGroup || !isWhiteListed(message->chat->id))
         {
@@ -182,49 +219,13 @@ int main() {
         {
             loader.saveKarma(karma); // TODO
             bot.getApi().sendMessage(message->chat->id, response);
+            return;
         }
 
-        // Command to show karma: "/karma @user"
-        if (text.rfind("/karma", 0) == 0) { // starts with "/karma"
-            std::istringstream iss(text);
-            std::string cmd, userArg;
-            iss >> cmd >> userArg;
-
-            // CASE 1: /karma @username → show karma for that user
-            if (!userArg.empty() && userArg[0] == '@') {
-                int score = karma[userArg];
-                std::string response = userArg + " has karma: " + std::to_string(score);
-                bot.getApi().sendMessage(message->chat->id, response);
-                return;
-            }
-
-            // CASE 2: /karma with NO argument → dump full report using KarmaLoader::karmaToString
-            if (userArg.empty()) {
-                if (karma.empty()) {
-                    bot.getApi().sendMessage(
-                        message->chat->id,
-                        "No karma data available yet."
-                        );
-                    return;
-                }
-
-                // Use KarmaLoader to generate a string representation
-                std::string csv = loader.karmaToString(karma);
-
-                // You can send it as plain text (username,karma per line)
-                std::string report = "📊 Karma report (username, karma):\n\n" + csv;
-
-                bot.getApi().sendMessage(
-                    message->chat->id,
-                    report
-                    );
-                return;
-            }
-            // CASE 3: Invalid usage
-            bot.getApi().sendMessage(message->chat->id,
-                                     "Usage:\n"
-                                     "/karma @username — show karma for a user\n"
-                                     "/karma — show full karma report");
+        response = displayKarma(message, karma, loader);
+        if(!response.empty())
+        {
+            bot.getApi().sendMessage(message->chat->id, response);
             return;
         }
     });
