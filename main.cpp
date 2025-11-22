@@ -1,5 +1,6 @@
 #include <tgbot/tgbot.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <regex>
 #include <iostream>
 
@@ -13,37 +14,49 @@ std::string loadToken() {
     return std::string(token);
 }
 
-std::int64_t getChatId()
+std::unordered_set<std::int64_t> getAllowedChatIds()
 {
-    const char* id = std::getenv("CHAT_ID");
-    if (!id) {
-        throw std::runtime_error("CHAT_ID env variable is not set");
+    const char* env = std::getenv("CHAT_IDS");
+    if (!env) {
+        throw std::runtime_error("CHAT_IDS env variable is not set");
     }
 
-    try {
-        return std::stoll(std::string(id));
-    } catch (const std::exception& e) {
-        throw std::runtime_error(std::string("Invalid CHAT_ID value: ") + e.what());
-    }
-}
+    std::string value(env);
+    std::unordered_set<std::int64_t> result;
 
-std::int64_t getDebugChatId()
-{
-    const char* id = std::getenv("DEBUG_CHAT_ID");
-    if (!id) {
-        throw std::runtime_error("DEBUG_CHAT_ID env variable is not set");
+    std::stringstream ss(value);
+    std::string token;
+    while (std::getline(ss, token, ','))
+    {
+        // Trim spaces
+        auto start = token.find_first_not_of(" \t");
+        auto end   = token.find_last_not_of(" \t");
+        if (start == std::string::npos) {
+            continue; // skip empty parts like ",,"
+        }
+        std::string trimmed = token.substr(start, end - start + 1);
+
+        try {
+            std::int64_t id = std::stoll(trimmed);
+            result.insert(id);
+        } catch (const std::exception& e) {
+            throw std::runtime_error(
+                std::string("Invalid chat id in CHAT_IDS: '") +
+                trimmed + "' (" + e.what() + ")"
+            );
+        }
     }
 
-    try {
-        return std::stoll(std::string(id));
-    } catch (const std::exception& e) {
-        throw std::runtime_error(std::string("Invalid DEBUG_CHAT_ID value: ") + e.what());
+    if (result.empty()) {
+        throw std::runtime_error("CHAT_IDS is set but no valid IDs were parsed");
     }
+
+    return result;
 }
 
 bool isWhiteListed(std::int64_t chatId)
 {
-    return chatId == getChatId() || chatId == getDebugChatId();
+    return getAllowedChatIds().contains(chatId);
 }
 
 //! If no karma update detected - returns an empty string
