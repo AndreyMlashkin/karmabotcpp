@@ -95,25 +95,19 @@ std::string updateKarma(TgBot::Message::Ptr message, std::unordered_map<std::str
             && message->from->id == message->replyToMessage->from->id)
     {
         return "You cannot change your own karma 😉";
-        // bot.getApi().sendMessage(message->chat->id, "You cannot change your own karma 😉");
-        // return;
     }
     // Also prevent "@self ++" case
     if (message->from && !message->from->username.empty()
             && displayName == "@" + message->from->username)
     {
         return "You cannot change your own karma 😉";
-        // bot.getApi().sendMessage(message->chat->id, "You cannot change your own karma 😉");
-        // return;
     }
 
     int delta = (op == "++") ? 1 : -1;
     int &score = karma[targetKey];
     score += delta;
-    // loader.saveKarma(karma);
 
     std::string response = displayName + " now has karma: " + std::to_string(score);
-    // bot.getApi().sendMessage(message->chat->id, response);
     return response;
 }
 
