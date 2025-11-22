@@ -50,8 +50,6 @@ Rates fetchRates()
         cpr::Url{"https://open.er-api.com/v6/latest/USD"}
     );
 
-    std::cout << r.text;
-
     if (r.error || r.status_code != 200) {
         throw std::runtime_error(
             "FX HTTP error: " + r.error.message +
@@ -68,17 +66,17 @@ Rates fetchRates()
         if (j.contains("error-type")) {
             err = j["error-type"].get<std::string>();
         }
-        throw std::runtime_error("FX API returned non-success: " + err);
+        throw std::runtime_error("FX API returned non-success: " + err + "\nText was: " + r.text);
     }
 
     if (!j.contains("rates")) {
-        throw std::runtime_error("FX response has no 'rates' field");
+        throw std::runtime_error("FX response has no 'rates' field" + "\nText was: " + r.text);
     }
 
     auto rates = j.at("rates");
 
     if (!rates.contains("KES") || !rates.contains("EUR") || !rates.contains("RUB")) {
-        throw std::runtime_error("FX response missing one of KES/EUR/RUB");
+        throw std::runtime_error("FX response missing one of KES/EUR/RUB" + "\nText was: " + r.text);
     }
 
     // 1 USD = ? KES / EUR / RUB
