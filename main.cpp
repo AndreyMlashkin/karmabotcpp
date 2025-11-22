@@ -27,6 +27,25 @@ std::int64_t getChatId()
     }
 }
 
+std::int64_t getDebugChatId()
+{
+    const char* id = std::getenv("DEBUG_CHAT_ID");
+    if (!id) {
+        throw std::runtime_error("DEBUG_CHAT_ID env variable is not set");
+    }
+
+    try {
+        return std::stoll(std::string(id));
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Invalid DEBUG_CHAT_ID value: ") + e.what());
+    }
+}
+
+bool isWhiteListed(std::int64_t chatId)
+{
+    return chatId == getChatId() || chatId == getDebugChatId();
+}
+
 std::string updateKarma(TgBot::Message::Ptr message, std::unordered_map<std::string, int>& karma)
 {
     const std::string& text = message->text;
@@ -147,7 +166,7 @@ int main() {
         const std::string& text = message->text;
 
         bool isGroup = message->chat->type == TgBot::Chat::Type::Group || message->chat->type == TgBot::Chat::Type::Supergroup;
-        if (!isGroup || message->chat->id != getChatId())
+        if (!isGroup || !isWhiteListed(message->chat->id))
         {
             bot.getApi().sendMessage(
                 message->chat->id,
