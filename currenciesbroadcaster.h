@@ -23,6 +23,7 @@ public:
 
 private:
     void run();
+    void sendRates();
 
     TgBot::Bot* m_bot;
     std::unordered_set<std::int64_t> m_chatsToBroadcast;
