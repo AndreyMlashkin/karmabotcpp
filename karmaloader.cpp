@@ -39,15 +39,24 @@ void KarmaLoader::loadKarma(std::unordered_map<std::string, int> &karma)
     }
 }
 
-void KarmaLoader::saveKarma(const std::unordered_map<std::string, int> &karma)
+void KarmaLoader::saveKarma(const std::unordered_map<std::string, int>& karma) const
 {
     std::ofstream file(m_fileName, std::ios::trunc);
     if (!file.is_open()) {
-        std::cerr << "[ERROR] Could not open karma.csv for writing!\n";
+        std::cerr << "[ERROR] Could not open " << m_fileName << " for writing!\n";
         return;
     }
 
+    file << karmaToString(karma);
+}
+
+std::string KarmaLoader::karmaToString(const std::unordered_map<std::string, int> &karma)
+{
+    std::ostringstream oss;
+
     for (const auto &[username, score] : karma) {
-        file << username << "," << score << "\n";
+        oss << username << "," << score << "\n";
     }
+
+    return oss.str();
 }

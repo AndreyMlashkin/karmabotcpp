@@ -27,6 +27,7 @@ std::int64_t getChatId()
     }
 }
 
+
 int main() {
     // 1. Load bot token
     const std::string token = loadToken();
@@ -40,9 +41,12 @@ int main() {
     // Regex to catch things like "@user123 ++" or "@user123--"
     std::regex karmaRegex(R"((@\w+)\s*(\+\+|--))");
 
+    // Regex to catch plain "++" or "--" in a reply
+    std::regex replyKarmaRegex(R"(^\s*(\+\+|--)\s*$)");
+
     // 3. Handle ANY incoming message
     bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
-        std::cout << "got a message: " << message << "\t" << message->text << "ID: " << message->chat->id << std::endl;
+        std::cout << "got a message: " << message->text << " from: " << message->from << std::endl;
 
         if (!message || message->text.empty())
             return;
@@ -61,29 +65,71 @@ int main() {
             return;
         }
 
-        std::smatch match;
-        if (std::regex_search(text, match, karmaRegex)) {
-            // match[1] = "@username", match[2] = "++" or "--"
-            std::string username = match[1].str();
-            std::string op       = match[2].str();
+        // ---- KARMA UPDATE (mention style or reply style) ----
+        {
+            std::string targetKey;   // what we use as key in the karma map
+            std::string displayName; // what we show in the message
+            std::string op;
 
-            // Prevent self-karma
-            if (message->from && ("@" + message->from->username) == username) {
-                bot.getApi().sendMessage(
-                    message->chat->id,
-                    "You cannot change your own karma 😉"
-                    );
-                return;
+            std::smatch match;
+
+            // CASE 1: Classic "@username ++" / "@username --"
+            if (std::regex_search(text, match, karmaRegex)) {
+                // match[1] = "@username", match[2] = "++" or "--"
+                displayName = match[1].str();
+                targetKey   = displayName;          // store by @username
+                op          = match[2].str();
+            }
+            // CASE 2: Reply with "++" or "--" → affect replied user
+            else if (message->replyToMessage &&
+                     std::regex_match(text, match, replyKarmaRegex)) {
+                op = match[1].str(); // "++" or "--"
+
+                if (message->replyToMessage->from) {
+                    if (!message->replyToMessage->from->username.empty()) {
+                        displayName = "@" + message->replyToMessage->from->username;
+                        targetKey   = displayName; // use @username as key
+                    } else {
+                        // Fallback if user has no username: use id-based key
+                        targetKey   = "id:" + std::to_string(message->replyToMessage->from->id);
+                        displayName = targetKey;
+                    }
+                }
             }
 
-            int delta = (op == "++") ? 1 : -1;
-            int& score = karma[username];
-            score += delta;
-            loader.saveKarma(karma);
+            // If we didn't detect any karma operation, continue as usual
+            if (targetKey.empty()) {
+                // fall through to /karma handling
+            } else {
+                // Prevent self-karma (for both mention and reply cases)
+                if (message->from && message->replyToMessage &&
+                    message->from->id == message->replyToMessage->from->id) {
+                    bot.getApi().sendMessage(
+                        message->chat->id,
+                        "You cannot change your own karma 😉"
+                        );
+                    return;
+                }
+                // Also prevent "@self ++" case
+                if (message->from &&
+                    !message->from->username.empty() &&
+                    displayName == "@" + message->from->username) {
+                    bot.getApi().sendMessage(
+                        message->chat->id,
+                        "You cannot change your own karma 😉"
+                        );
+                    return;
+                }
 
-            std::string response = username + " now has karma: " + std::to_string(score);
-            bot.getApi().sendMessage(message->chat->id, response);
-            return;
+                int delta = (op == "++") ? 1 : -1;
+                int& score = karma[targetKey];
+                score += delta;
+                loader.saveKarma(karma);
+
+                std::string response = displayName + " now has karma: " + std::to_string(score);
+                bot.getApi().sendMessage(message->chat->id, response);
+                return;
+            }
         }
 
         // Command to show karma: "/karma @user"
@@ -92,16 +138,42 @@ int main() {
             std::string cmd, userArg;
             iss >> cmd >> userArg;
 
+            // CASE 1: /karma @username → show karma for that user
             if (!userArg.empty() && userArg[0] == '@') {
                 int score = karma[userArg];
                 std::string response = userArg + " has karma: " + std::to_string(score);
                 bot.getApi().sendMessage(message->chat->id, response);
-            } else {
+                return;
+            }
+
+            // CASE 2: /karma with NO argument → dump full report using KarmaLoader::karmaToString
+            if (userArg.empty()) {
+                if (karma.empty()) {
+                    bot.getApi().sendMessage(
+                        message->chat->id,
+                        "No karma data available yet."
+                        );
+                    return;
+                }
+
+                // Use KarmaLoader to generate a string representation
+                std::string csv = loader.karmaToString(karma);
+
+                // You can send it as plain text (username,karma per line)
+                std::string report = "📊 Karma report (username, karma):\n\n" + csv;
+
                 bot.getApi().sendMessage(
                     message->chat->id,
-                    "Usage: /karma @username"
+                    report
                     );
+                return;
             }
+            // CASE 3: Invalid usage
+            bot.getApi().sendMessage(message->chat->id,
+                                     "Usage:\n"
+                                     "/karma @username — show karma for a user\n"
+                                     "/karma — show full karma report");
+            return;
         }
     });
 
