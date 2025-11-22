@@ -5,6 +5,7 @@ find_package(tgbot REQUIRED CONFIG)
 
 add_executable(${PROJECT_NAME} main.cpp
     karmaloader.h karmaloader.cpp
-    karmabot.h karmabot.cpp)
+    karmabot.h karmabot.cpp
+    misc.h misc.cpp)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 target_link_libraries(${PROJECT_NAME} tgbot::tgbot)
