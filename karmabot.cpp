@@ -93,7 +93,9 @@ std::string KarmaBot::updateKarma(const std::shared_ptr<TgBot::Message> &message
         return {};
 
     // Prevent self-karma (for both mention and reply cases)
-    if (message->from && message->replyToMessage
+    if (message->from
+            && message->replyToMessage
+            && message->replyToMessage->from
             && message->from->id == message->replyToMessage->from->id)
     {
         return "You cannot change your own karma 😉";
