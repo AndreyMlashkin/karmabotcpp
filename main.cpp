@@ -12,6 +12,7 @@ int main() {
     // 1. Load bot token
     const std::string token = telegrammToken();
     TgBot::Bot bot(token);
+    const auto allowedChats = getAllowedChatIds();
 
     KarmaBot karmabot;
 
@@ -24,7 +25,7 @@ int main() {
         karmabot.logMessageToStdout(message);
 
         bool isGroup = message->chat->type == TgBot::Chat::Type::Group || message->chat->type == TgBot::Chat::Type::Supergroup;
-        if (!isGroup || !isWhiteListed(message->chat->id))
+        if (!isGroup || !allowedChats.contains(message->chat->id))
         {
             bot.getApi().sendMessage(
                 message->chat->id,
@@ -53,7 +54,6 @@ int main() {
     // 4. Long polling loop
     TgBot::TgLongPoll longPoll(bot);
 
-    auto allowedChats = getAllowedChatIds();
     std::string startupMessage = std::string("Karma bot updated. Version: ") + gitVersion();
     std::cout << startupMessage << std::endl;
 
