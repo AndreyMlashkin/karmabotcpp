@@ -6,6 +6,7 @@
 #include "karmabot.h"
 #include "misc.h"
 #include "currenciesbroadcaster.h"
+#include "git_version.h"
 
 int main() {
     // 1. Load bot token
@@ -52,7 +53,7 @@ int main() {
     // 4. Long polling loop
     TgBot::TgLongPoll longPoll(bot);
 
-    std::cout << "Karma bot started..." << std::endl;
+    std::cout << "Karma bot started. Version: " << gitVersion() << std::endl;
 
     auto allowedChats = getAllowedChatIds();
     CurrenciesBroadcaster broadcaster(&bot, allowedChats);
