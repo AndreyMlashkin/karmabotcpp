@@ -26,19 +26,19 @@ struct Rates {
     }
     double eurKesBuy() const
     {
-        return usdKes * 0.99;
+        return eurKes * 0.99;
     }
     double eurKesSell() const
     {
-        return usdKes * 1.05;
+        return eurKes * 1.05;
     }
     double rubKesBuy() const
     {
-        return usdKes * 0.965;
+        return rubKes * 0.965;
     }
     double rubKesSell() const
     {
-        return usdKes * 1.03;
+        return rubKes * 1.03;
     }
 };
 
