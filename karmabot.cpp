@@ -130,7 +130,8 @@ std::string KarmaBot::displayKarma(const std::shared_ptr<TgBot::Message> &messag
 
     // CASE 1: /karma @username → show karma for that user
     if (!userArg.empty() && userArg[0] == '@') {
-        int score = m_karma[userArg];
+        auto it = m_karma.find(userArg);
+        int score = (it != m_karma.end()) ? it->second : 0;
         std::string response = userArg + " has karma: " + std::to_string(score);
         return response;
     }
