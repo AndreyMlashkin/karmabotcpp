@@ -53,9 +53,19 @@ int main() {
     // 4. Long polling loop
     TgBot::TgLongPoll longPoll(bot);
 
-    std::cout << "Karma bot started. Version: " << gitVersion() << std::endl;
-
     auto allowedChats = getAllowedChatIds();
+    std::string startupMessage = std::string("Karma bot updated. Version: ") + gitVersion();
+    std::cout << startupMessage << std::endl;
+
+    for (auto chatId : allowedChats) {
+        try {
+            bot.getApi().sendMessage(chatId, startupMessage);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to send startup message to " << chatId
+                      << ": " << e.what() << std::endl;
+        }
+    }
+
     CurrenciesBroadcaster broadcaster(&bot, allowedChats);
     broadcaster.start();
 
