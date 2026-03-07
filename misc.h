@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <cstdint>
 
 std::string telegrammToken();
 std::unordered_set<std::int64_t> getAllowedChatIds();

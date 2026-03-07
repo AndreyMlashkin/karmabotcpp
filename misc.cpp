@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <cstdlib>
 
 std::string telegrammToken() {
     const char* token = std::getenv("TELEGRAM_BOT_TOKEN");

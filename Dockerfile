@@ -8,10 +8,13 @@ RUN apk add --no-cache \
     cmake \
     git \
     linux-headers \
+    perl \
     pkgconf \
     py3-pip \
     python3
 
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 RUN pip install --no-cache-dir "conan==2.26.2"
 
 WORKDIR /src
