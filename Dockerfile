@@ -5,6 +5,7 @@ FROM alpine:3.20 AS builder
 RUN apk add --no-cache \
     bash \
     build-base \
+    ca-certificates \
     cmake \
     git \
     linux-headers \
@@ -25,7 +26,7 @@ COPY *.h ./
 COPY cmake ./cmake
 
 RUN conan profile detect --force
-RUN conan install . --output-folder=build-release -s build_type=Release --build=missing
+RUN conan install . --output-folder=build-release -s build_type=Release --build=missing --build='*'
 RUN cmake -B build-release \
     -DCMAKE_TOOLCHAIN_FILE=build-release/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Release

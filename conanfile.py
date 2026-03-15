@@ -13,10 +13,10 @@ class KarmaBotCppConan(ConanFile):
         "boost/*:without_math": False,
         "boost/*:without_locale": False,
         "openssl/*:shared": False,
-        "curl/*:shared": False,
+        "libcurl/*:shared": False,
     }
 
     def requirements(self):
         self.requires("tgbot/1.9.1")
         self.requires("cpr/1.14.2")
-        self.requires("nlohmann_json/3.11.3")
+        self.requires("nlohmann_json/3.12.0")
