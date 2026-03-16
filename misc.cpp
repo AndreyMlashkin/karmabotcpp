@@ -1,5 +1,7 @@
 #include "misc.h"
 
+#include <algorithm>
+#include <cctype>
 #include <stdexcept>
 #include <sstream>
 #include <cstdlib>
@@ -50,6 +52,31 @@ std::unordered_set<std::int64_t> getAllowedChatIds()
     }
 
     return result;
+}
+
+bool exchangeRatesEnabled()
+{
+    const char* env = std::getenv("ENABLE_EXCHANGE_RATES");
+    if (!env) {
+        return true;
+    }
+
+    std::string value(env);
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+
+    if (value == "1" || value == "true" || value == "yes" || value == "on") {
+        return true;
+    }
+
+    if (value == "0" || value == "false" || value == "no" || value == "off") {
+        return false;
+    }
+
+    throw std::runtime_error(
+        "ENABLE_EXCHANGE_RATES must be one of: 1, 0, true, false, yes, no, on, off"
+    );
 }
 
 bool isWhiteListed(std::int64_t chatId)

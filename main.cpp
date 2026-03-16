@@ -67,7 +67,11 @@ int main() {
     }
 
     CurrenciesBroadcaster broadcaster(&bot, allowedChats);
-    broadcaster.start();
+    if (exchangeRatesEnabled()) {
+        broadcaster.start();
+    } else {
+        std::cout << "Exchange rates broadcaster disabled." << std::endl;
+    }
 
     while (true) {
         try {

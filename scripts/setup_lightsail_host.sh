@@ -74,6 +74,7 @@ load_env() {
 
     : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is not set in $ENV_FILE}"
     : "${CHAT_IDS:?CHAT_IDS is not set in $ENV_FILE}"
+    : "${ENABLE_EXCHANGE_RATES:=1}"
 }
 
 build_image() {
@@ -98,6 +99,7 @@ run_container() {
         -v "$DATA_DIR:/data" \
         -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
         -e CHAT_IDS="$CHAT_IDS" \
+        -e ENABLE_EXCHANGE_RATES="$ENABLE_EXCHANGE_RATES" \
         "$IMAGE_TAG" >/dev/null
 }
 
