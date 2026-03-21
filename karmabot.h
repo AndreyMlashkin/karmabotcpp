@@ -15,6 +15,7 @@ class KarmaBot
 {
 public:
     KarmaBot();
+    ~KarmaBot();
 
     static void logMessageToStdout(const std::shared_ptr<TgBot::Message>& message);
 
@@ -22,6 +23,7 @@ public:
     std::string updateKarma(const std::shared_ptr<TgBot::Message>& message);
 
     std::string displayKarma(const std::shared_ptr<TgBot::Message>& message);
+    void save() const;
 
 
 private:

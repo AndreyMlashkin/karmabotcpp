@@ -41,6 +41,16 @@ KarmaBot::KarmaBot()
     m_loader.loadKarma(m_karma);
 }
 
+KarmaBot::~KarmaBot()
+{
+    save();
+}
+
+void KarmaBot::save() const
+{
+    m_loader.saveKarma(m_karma);
+}
+
 void KarmaBot:: logMessageToStdout(const std::shared_ptr<TgBot::Message> &message)
 {
     std::cout << "got a message: " << message->text
@@ -113,7 +123,7 @@ std::string KarmaBot::updateKarma(const std::shared_ptr<TgBot::Message> &message
     score += delta;
 
     std::string response = displayName + " now has karma: " + std::to_string(score);
-    m_loader.saveKarma(m_karma);
+    save();
     return response;
 }
 

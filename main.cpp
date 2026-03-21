@@ -2,13 +2,33 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <iostream>
+#include <csignal>
 
 #include "karmabot.h"
 #include "misc.h"
 #include "currenciesbroadcaster.h"
 #include "git_version.h"
 
+namespace {
+
+volatile std::sig_atomic_t g_shutdownRequested = 0;
+
+void requestShutdown(int)
+{
+    g_shutdownRequested = 1;
+}
+
+bool shutdownRequested()
+{
+    return g_shutdownRequested != 0;
+}
+
+}
+
 int main() {
+    std::signal(SIGINT, requestShutdown);
+    std::signal(SIGTERM, requestShutdown);
+
     // 1. Load bot token
     const std::string token = telegrammToken();
     TgBot::Bot bot(token);
@@ -73,13 +93,19 @@ int main() {
         std::cout << "Exchange rates broadcaster disabled." << std::endl;
     }
 
-    while (true) {
+    while (!shutdownRequested()) {
         try {
             longPoll.start();
         } catch (std::exception& e) {
+            if (shutdownRequested()) {
+                break;
+            }
             std::cerr << "Error: " << e.what() << std::endl;
         }
     }
+
+    std::cout << "Shutdown requested. Saving karma and exiting." << std::endl;
+    karmabot.save();
 
     return 0;
 }
