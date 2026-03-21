@@ -51,6 +51,15 @@ void KarmaBot::save() const
     m_loader.saveKarma(m_karma);
 }
 
+std::string KarmaBot::currentKarma() const
+{
+    if (m_karma.empty()) {
+        return "No karma data available yet.";
+    }
+
+    return m_loader.karmaToString(m_karma);
+}
+
 void KarmaBot:: logMessageToStdout(const std::shared_ptr<TgBot::Message> &message)
 {
     std::cout << "got a message: " << message->text

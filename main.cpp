@@ -106,6 +106,11 @@ int main() {
 
     std::cout << "Shutdown requested. Saving karma and exiting." << std::endl;
     karmabot.save();
+    const std::string currentKarma = karmabot.currentKarma();
+    std::cout << "Current karma:\n" << currentKarma;
+    if (!currentKarma.empty() && currentKarma.back() != '\n') {
+        std::cout << '\n';
+    }
 
     return 0;
 }

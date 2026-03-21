@@ -23,6 +23,7 @@ public:
     std::string updateKarma(const std::shared_ptr<TgBot::Message>& message);
 
     std::string displayKarma(const std::shared_ptr<TgBot::Message>& message);
+    std::string currentKarma() const;
     void save() const;
 
 
